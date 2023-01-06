@@ -21,7 +21,7 @@ const createSendToken = (user, statusCode, res) => {
     ),
     secure: process.env.NODE_ENV === 'production',
     httpOnly: false,
-    samesite: 'None',
+    sameSite: 'None',
   });
 
   user.password = undefined;
