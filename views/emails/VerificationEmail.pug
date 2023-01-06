@@ -1,0 +1,19 @@
+extend baseEmail
+
+block content
+    .headLogo 
+        img(src="https://res.cloudinary.com/dcu2kxr5x/image/upload/v1672997573/BACKBOOK/assets/backbooklogo_on8xru.svg" alt="" style="width: 30px")
+        span Action required : Activate your backbook account
+    p Hello #{firstname},
+    p You recently created an account on Facebook. To complete your registration, please confirm your account.
+    table.btn.btn-primary(role='presentation' border='0' cellpadding='0' cellspacing='0')
+        tbody
+            tr
+                td(align='left')
+                    table(role='presentation' border='0' cellpadding='0' cellspacing='0')
+                        tbody
+                            tr
+                                td
+                                    a(href=`${url}` target='_blank') Confirm your account
+    p Backbook allows you to stay in touch with all your friends, once refistered on backbook,you can share photos,organize events and much more.
+    p - Mohamed Elsobky, CEO
