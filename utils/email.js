@@ -25,7 +25,7 @@ module.exports = class Email {
 
   async newTransport(mailOptions) {
     let transport;
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'production') {
       const accessToken = await auth.getAccessToken();
       transport = nodemailer.createTransport({
         service: 'gmail',
