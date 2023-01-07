@@ -29,6 +29,7 @@ module.exports = class Email {
       const accessToken = await auth.getAccessToken();
       transport = nodemailer.createTransport({
         service: 'gmail',
+        secure: true,
         auth: {
           type: 'OAuth2',
           user: process.env.EMAIL_ID,
