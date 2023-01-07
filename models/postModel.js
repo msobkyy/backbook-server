@@ -155,7 +155,7 @@ postSchema.pre(/^find/, function (next) {
 postSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'user',
-    select: 'first_name last_name photo username gender cover',
+    select: 'first_name last_name photo username gender cover confirmed',
   })
     .populate({
       path: 'lastComment',
@@ -176,7 +176,7 @@ postSchema.post('save', async function () {
 
   this.populate({
     path: 'user',
-    select: 'first_name last_name photo username gender cover',
+    select: 'first_name last_name photo username gender cover confirmed',
   });
 });
 

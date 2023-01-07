@@ -72,7 +72,7 @@ ReactionSchema.index({ post: 1, user: 1 }, { unique: true });
 ReactionSchema.pre(/^find/, async function (next) {
   this.populate({
     path: 'user',
-    select: 'first_name last_name photo username',
+    select: 'first_name last_name photo username confirmed',
   });
 
   next();

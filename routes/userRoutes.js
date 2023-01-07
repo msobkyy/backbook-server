@@ -17,6 +17,8 @@ router
   .post(authController.validateResetCode)
   .patch(authController.resetPassword);
 
+router.put('/ping', authController.isLoggedIn, authController.ping);
+
 // PROTECT ALL ROUTES AFTER THIS MIDDLEWARE
 router.use(authController.protect);
 

@@ -276,6 +276,10 @@ exports.getFriends = catchAsync(async (req, res, next) => {
   });
 
   // get recived friend requests
+  const recivedRequestsCount = await Friend.countDocuments({
+    recipient: userId,
+    status: 'pending',
+  });
   const recivedRequests = await Friend.find({
     recipient: userId,
     status: 'pending',
@@ -287,7 +291,7 @@ exports.getFriends = catchAsync(async (req, res, next) => {
       select: 'first_name last_name photo username gender cover',
     });
 
-  // get sent  requests
+  // get sent requests
   const sentRequests = await Friend.find({
     sender: userId,
     status: 'pending',
@@ -303,6 +307,7 @@ exports.getFriends = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: {
+      recivedRequestsCount,
       friendLists,
       recivedRequests,
       sentRequests,

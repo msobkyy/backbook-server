@@ -34,8 +34,8 @@ exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
 
   const processedImage = await sharp(req.file.buffer)
     .resize(500, 500)
-    .toFormat('jpeg')
-    .jpeg({ quality: 90 })
+    .toFormat('webp')
+    .webp({ quality: 90 })
     .toBuffer();
 
   const filePath = await uploadToCloudinary(processedImage, path);
@@ -51,8 +51,8 @@ exports.resizeUserCover = catchAsync(async (req, res, next) => {
   const path = `${process.env.APP_NAME}/users/${req.user.id}/public/profile_covers/`;
 
   const processedImage = await sharp(req.file.buffer)
-    .toFormat('jpeg')
-    .jpeg({ quality: 90 })
+    .toFormat('webp')
+    .webp({ quality: 90 })
     .toBuffer();
 
   const filePath = await uploadToCloudinary(processedImage, path);
@@ -73,7 +73,9 @@ const filterObj = (obj, ...allowed) => {
 exports.getProfile = catchAsync(async (req, res, next) => {
   const { username } = req.params;
 
-  const user = await User.findOne({ username });
+  const user = await User.findOne({ username }).select(
+    '-search -savedPosts -email'
+  );
 
   if (!user) {
     return next(new AppError('No user found with that username', 404));
@@ -92,7 +94,7 @@ exports.getProfile = catchAsync(async (req, res, next) => {
     .limit(9)
     .populate({
       path: 'sender recipient',
-      select: 'first_name last_name photo username gender cover',
+      select: 'first_name last_name photo username gender cover confirmed',
     });
 
   // Map the friend documents to an array of user documents

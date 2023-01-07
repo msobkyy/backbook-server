@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 const Post = require('./postModel');
 
+function isMyFieldRequired() {
+  return this.photo?.length > 0 ? false : true;
+}
+
 const CommentSchema = new mongoose.Schema({
   post: {
     type: mongoose.Schema.Types.ObjectId,
@@ -16,7 +20,7 @@ const CommentSchema = new mongoose.Schema({
   },
   text: {
     type: String,
-    required: true,
+    required: isMyFieldRequired,
     trim: true,
     maxlength: 250,
   },
@@ -53,10 +57,10 @@ const CommentSchema = new mongoose.Schema({
 CommentSchema.pre(/^find/, async function (next) {
   this.populate({
     path: 'user',
-    select: 'first_name last_name photo username',
+    select: 'first_name last_name photo username confirmed',
   }).populate({
     path: 'replies.user',
-    select: 'first_name last_name photo username',
+    select: 'first_name last_name photo username confirmed',
   });
 
   next();
@@ -91,7 +95,7 @@ CommentSchema.post('save', async function () {
   // this points to current review
   this.populate({
     path: 'user',
-    select: 'first_name last_name photo username',
+    select: 'first_name last_name photo username confirmed',
   });
   const stats = await this.constructor.calcComments(this.post, this._id);
   this.commentsCount = stats;

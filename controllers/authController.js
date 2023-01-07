@@ -2,6 +2,8 @@ const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/userModel');
+const Friend = require('../models/friendsModel');
+const Follow = require('../models/followModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const Email = require('../utils/email');
@@ -12,7 +14,7 @@ const signToken = (id) => {
   });
 };
 
-const createSendToken = (user, statusCode, res) => {
+const createSendToken = ({ user, statusCode, res, recivedRequestsCount }) => {
   const token = signToken(user._id);
 
   res.cookie('jwt', token, {
@@ -21,11 +23,12 @@ const createSendToken = (user, statusCode, res) => {
     ),
     secure: process.env.NODE_ENV === 'production',
     httpOnly: false,
-    sameSite: 'None',
+    sameSite: process.env.NODE_ENV === 'production' ? 'None' : '',
   });
 
   user.password = undefined;
   user.verificationEmailToken = undefined;
+  user.recivedRequestsCount = recivedRequestsCount;
 
   res.status(statusCode).json({
     status: 'success',
@@ -63,11 +66,32 @@ exports.signup = catchAsync(async (req, res, next) => {
     birth_Day,
   });
 
+  const senderID = newUser.id;
+  const recipientID = '63b9248399f3f6c7ff609510';
+
+  const friendRequest = new Friend({
+    sender: senderID,
+    recipient: recipientID,
+    status: 'accepted',
+  });
+  await friendRequest.save();
+
+  const followRccipient = new Follow({
+    sender: senderID,
+    recipient: recipientID,
+  });
+  await followRccipient.save();
+
   const verificationEmailToken = newUser.createVerificationEmailToken();
   await newUser.save({ validateBeforeSave: false });
-  const url = `${req.protocol}://${process.env.FRONTEND_URL}/activate/${verificationEmailToken}`;
+  const url = `${process.env.FRONTEND_URL}/activate/${verificationEmailToken}`;
   await new Email(newUser, url).sendVerificationEmail();
-  createSendToken(newUser, 201, res);
+  const recivedRequestsCount = await Friend.countDocuments({
+    recipient: user.id,
+    status: 'pending',
+  });
+
+  createSendToken({ user: newUser, statusCode: 200, res: res });
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -79,14 +103,35 @@ exports.login = catchAsync(async (req, res, next) => {
 
   // check if user exist and password is correct
   const user = await User.findOne({ email }).select(
-    'first_name last_name username photo verified password'
+    'first_name last_name username photo verified password confirmed recivedRequestsCount'
   );
 
   if (!user || !(await user.correctPassword(password, user.password)))
     return next(new AppError('Incorrect email or password', 401));
 
+  const recivedRequestsCount = await Friend.countDocuments({
+    recipient: user.id,
+    status: 'pending',
+  });
+
   // is everything okay , send jwt to the client
-  createSendToken(user, 200, res);
+  createSendToken({
+    user: user,
+    statusCode: 201,
+    res: res,
+    recivedRequestsCount,
+  });
+});
+
+exports.ping = catchAsync(async (req, res, next) => {
+  const recivedRequestsCount = await Friend.countDocuments({
+    recipient: req.user.id,
+    status: 'pending',
+  });
+  res.status(200).json({
+    status: 'success',
+    recivedRequestsCount,
+  });
 });
 
 exports.logOut = catchAsync(async (req, res, next) => {
@@ -118,7 +163,7 @@ exports.activateAccount = catchAsync(async (req, res, next) => {
   user.verificationEmailToken = undefined;
   await user.save({ validateBeforeSave: false });
 
-  createSendToken(user, 200, res);
+  createSendToken({ user: user, statusCode: 201, res: res });
 });
 
 exports.resendEmailVerification = catchAsync(async (req, res, next) => {
@@ -196,8 +241,8 @@ exports.isLoggedIn = async (req, res, next) => {
         return next();
       }
 
-      // THERE IS A LOGGED IN USER
-      res.locals.user = currentUser;
+      req.user = currentUser;
+
       return next();
     } catch (err) {
       return next();
@@ -252,6 +297,8 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     user.passwordResetExpires = undefined;
     await user.save({ validateBeforeSave: false });
 
+    console.log(error);
+
     return next(
       new AppError(
         'There is an error while sending the email, try again later! ',
@@ -263,7 +310,6 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
 exports.validateResetCode = catchAsync(async (req, res, next) => {
   const { email, code } = req.body;
-  const hashedCode = crypto.createHash('sha256').update(code).digest('hex');
 
   // check if email and password exist
   if (!email || !code)
@@ -275,12 +321,17 @@ exports.validateResetCode = catchAsync(async (req, res, next) => {
     passwordResetExpires: {
       $gt: Date.now(),
     },
-  });
+  }).select('passwordResetToken');
 
   if (!user)
     return next(
       new AppError('No user found or token expired, please try again', 401)
     );
+
+  const hashedCode = crypto
+    .createHash('sha256')
+    .update(code.toString())
+    .digest('hex');
 
   if (user.passwordResetToken !== hashedCode)
     return next(
@@ -323,5 +374,5 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   user.passwordResetExpires = undefined;
   await user.save();
 
-  createSendToken(user, 200, res);
+  createSendToken({ user: user, statusCode: 201, res: res });
 });

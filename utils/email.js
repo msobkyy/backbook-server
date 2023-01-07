@@ -1,34 +1,33 @@
 const nodemailer = require('nodemailer');
 const { google } = require('googleapis');
-const { OAuth2 } = google.auth;
 const pug = require('pug');
 const { htmlToText } = require('html-to-text');
 
 const oauth_link = 'https://developers.google.com/oauthplayground';
 
-const auth = new OAuth2(
+const auth = new google.auth.OAuth2(
   process.env.MAILLING_ID,
   process.env.MAILLING_SECRET,
-  process.env.MAILLING_REFRESH_TOKEN,
   oauth_link
 );
+
+auth.setCredentials({
+  refresh_token: process.env.MAILLING_REFRESH_TOKEN,
+});
 
 module.exports = class Email {
   constructor(user, url) {
     this.to = user.email;
     this.firstname = user.first_name;
     this.url = url;
-    this.from = `Mohamed Elsobky <${process.env.EMAIL_ID}>`;
+    this.from = `Backbook <${process.env.EMAIL_ID}>`;
   }
 
-  newTransport() {
-    if (process.env.NODE_ENV === 'production') {
-      auth.setCredentials({
-        refresh_token: process.env.MAILLING_REFRESH_TOKEN,
-      });
-
-      const accessToken = auth.getAccessToken();
-      return nodemailer.createTransport({
+  async newTransport(mailOptions) {
+    let transport;
+    if (process.env.NODE_ENV === 'development') {
+      const accessToken = await auth.getAccessToken();
+      transport = nodemailer.createTransport({
         service: 'gmail',
         auth: {
           type: 'OAuth2',
@@ -36,19 +35,21 @@ module.exports = class Email {
           clientId: process.env.MAILLING_ID,
           clientSecret: process.env.MAILLING_SECRET,
           refreshToken: process.env.MAILLING_REFRESH_TOKEN,
-          accessToken,
+          accessToken: accessToken,
+        },
+      });
+    } else {
+      transport = nodemailer.createTransport({
+        host: process.env.TRAP_EMAIL_HOST,
+        port: process.env.TRAP_EMAIL_PORT,
+        auth: {
+          user: process.env.TRAP_EMAIL_USERNAME,
+          pass: process.env.TRAP_EMAIL_PASSWORD,
         },
       });
     }
 
-    return nodemailer.createTransport({
-      host: process.env.TRAP_EMAIL_HOST,
-      port: process.env.TRAP_EMAIL_PORT,
-      auth: {
-        user: process.env.TRAP_EMAIL_USERNAME,
-        pass: process.env.TRAP_EMAIL_PASSWORD,
-      },
-    });
+    transport.sendMail(mailOptions);
   }
 
   async send(template, subject) {
@@ -57,14 +58,14 @@ module.exports = class Email {
       { firstname: this.firstname, url: this.url, subject }
     );
     const mailOptions = {
-      form: process.env.EMAIL_ID,
+      form: this.from,
       to: this.to,
       subject: subject,
       html,
       text: htmlToText(html),
     };
 
-    await this.newTransport().sendMail(mailOptions);
+    await this.newTransport(mailOptions);
   }
 
   async sendVerificationEmail() {

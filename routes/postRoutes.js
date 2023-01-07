@@ -34,6 +34,4 @@ router.post(
 );
 router.get('/comments/:postID', postController.getComments);
 
-router.put('/post/:postID', postController.post);
-
 module.exports = router;

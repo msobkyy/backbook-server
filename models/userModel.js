@@ -84,6 +84,11 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
 
+    confirmed: {
+      type: Boolean,
+      default: false,
+    },
+
     verificationEmailToken: {
       type: String,
       select: false,
@@ -91,8 +96,7 @@ const userSchema = new mongoose.Schema(
 
     photo: {
       type: String,
-      default:
-        'https://res.cloudinary.com/alimov-cloud-fc/image/upload/v1657982970/default_pic_kfbjuy.png',
+      default: `${process.env.FRONTEND_URL}/images/default_pic.png`,
     },
 
     cover: {
@@ -110,18 +114,21 @@ const userSchema = new mongoose.Schema(
       type: Number,
       required: [true, 'user must have a birhday Year'],
       trim: true,
+      select: false,
     },
 
     birth_Month: {
       type: Number,
       required: [true, 'user must have a birhday Month'],
       trim: true,
+      select: false,
     },
 
     birth_Day: {
       type: Number,
       required: [true, 'user must have a birhday Day'],
       trim: true,
+      select: false,
     },
 
     followersCount: { type: Number, default: 0 },
@@ -129,6 +136,8 @@ const userSchema = new mongoose.Schema(
     followingCount: { type: Number, default: 0 },
 
     friendsCount: { type: Number, default: 0 },
+
+    recivedRequestsCount: { type: Number, default: 0 },
 
     search: [
       {

@@ -51,8 +51,8 @@ exports.resizePostImages = catchAsync(async (req, res, next) => {
       const path = `${process.env.APP_NAME}/users/${req.user.id}/public/posts/`;
 
       const processedImage = await sharp(file.buffer)
-        .toFormat('jpeg')
-        .jpeg({ quality: 70 })
+        .toFormat('webp')
+        .webp({ quality: 70 })
         .toBuffer();
 
       const filePath = await uploadToCloudinary(processedImage, path);
@@ -72,8 +72,8 @@ exports.resizeCommentPhoto = catchAsync(async (req, res, next) => {
   const path = `${process.env.APP_NAME}/users/${req.user.id}/sec/comments/`;
 
   const processedImage = await sharp(req.file.buffer)
-    .toFormat('jpeg')
-    .jpeg({ quality: 30 })
+    .toFormat('webp')
+    .webp({ quality: 30 })
     .toBuffer();
 
   const filePath = await uploadToCloudinary(processedImage, path);
@@ -252,12 +252,11 @@ exports.getReacts = catchAsync(async (req, res, next) => {
 });
 
 exports.addComment = catchAsync(async (req, res, next) => {
-  const { text } = req.body;
   const post = req.params.postID;
   const user = req.user.id;
 
-  if (!post || !text)
-    return next(new AppError('Please provide comment text', 400));
+  if (!post)
+    return next(new AppError('Please provide comment data and post', 400));
 
   const checkPost = await Post.findById(post);
   if (!checkPost) return next(new AppError('No post found', 404));
@@ -323,7 +322,7 @@ exports.addCommentReply = catchAsync(async (req, res, next) => {
   await checkComment.save();
   await checkComment.populate({
     path: 'replies.user',
-    select: 'first_name last_name photo username',
+    select: 'first_name last_name photo username confirmed',
   });
 
   res.status(200).json({
@@ -355,48 +354,5 @@ exports.getComments = catchAsync(async (req, res, next) => {
     status: 'success',
     datalength: comments?.length,
     data: { comments },
-  });
-});
-
-exports.post = catchAsync(async (req, res, next) => {
-  const { type } = req.body;
-  const postId = req.params.postID;
-  const userId = req.user.id;
-
-  const posts = await Post.aggregate([
-    {
-      $lookup: {
-        from: 'reactions',
-        localField: '_id',
-        foreignField: 'post',
-        as: 'reactions',
-      },
-    },
-    {
-      $project: {
-        _id: 1,
-        title: 1,
-        content: 1,
-        liked: {
-          $size: {
-            $filter: {
-              input: '$reactions',
-              as: 'reaction',
-              cond: {
-                $and: [
-                  { $eq: ['$$reaction.user', mongoose.Types.ObjectId(userId)] },
-                  { $eq: ['$$reaction.type', 'like'] },
-                ],
-              },
-            },
-          },
-        },
-      },
-    },
-  ]);
-
-  res.status(200).json({
-    status: 'success',
-    data: { posts },
   });
 });
