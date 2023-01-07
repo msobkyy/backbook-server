@@ -30,6 +30,7 @@ module.exports = class Email {
       transport = nodemailer.createTransport({
         service: 'gmail',
         secure: true,
+        greetingTimeout: 1000 * 4,
         auth: {
           type: 'OAuth2',
           user: process.env.EMAIL_ID,
