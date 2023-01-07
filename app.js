@@ -71,6 +71,8 @@ app.use('/api/v1/posts/createPost', limiter);
 app.use(express.json({ limit: '5000kb' }));
 app.use(express.urlencoded({ extended: true, limit: '5000kb' }));
 app.use(cookieParser());
+app.use(xss());
+
 app.set('view engine', 'pug');
 
 app.use('/api/v1/users', usersRouter);
