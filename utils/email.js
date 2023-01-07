@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer');
 const { google } = require('googleapis');
 const pug = require('pug');
 const { htmlToText } = require('html-to-text');
+const sgMail = require('@sendgrid/mail');
 
 const oauth_link = 'https://developers.google.com/oauthplayground';
 
@@ -15,12 +16,14 @@ auth.setCredentials({
   refresh_token: process.env.MAILLING_REFRESH_TOKEN,
 });
 
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
 module.exports = class Email {
   constructor(user, url) {
     this.to = user.email;
     this.firstname = user.first_name;
     this.url = url;
-    this.from = `Backbook <${process.env.EMAIL_ID}>`;
+    this.from = process.env.EMAIL_ID;
   }
 
   async newTransport(mailOptions) {
@@ -60,14 +63,24 @@ module.exports = class Email {
       { firstname: this.firstname, url: this.url, subject }
     );
     const mailOptions = {
-      form: this.from,
       to: this.to,
+      from: { email: 'backbook.creator@gmail.com', name: 'Backbook' },
       subject: subject,
-      html,
       text: htmlToText(html),
+      html: html,
     };
 
-    await this.newTransport(mailOptions);
+    // await this.newTransport(mailOptions);
+
+    try {
+      await sgMail.send(mailOptions);
+    } catch (error) {
+      console.error(error);
+
+      if (error.response) {
+        console.error(error.response.body);
+      }
+    }
   }
 
   async sendVerificationEmail() {
