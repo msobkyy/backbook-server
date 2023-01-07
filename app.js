@@ -18,6 +18,7 @@ const whitelist = [
   'http://192.168.1.2:3000',
   'http://localhost:3000',
   'https://backbook.vercel.app',
+  'https://backbook.onrender.com', 
 ];
 const corsOptions = {
   credentials: true,
