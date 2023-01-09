@@ -86,10 +86,6 @@ exports.signup = catchAsync(async (req, res, next) => {
   await newUser.save({ validateBeforeSave: false });
   const url = `${process.env.FRONTEND_URL}/activate/${verificationEmailToken}`;
   await new Email(newUser, url).sendVerificationEmail();
-  const recivedRequestsCount = await Friend.countDocuments({
-    recipient: user.id,
-    status: 'pending',
-  });
 
   createSendToken({ user: newUser, statusCode: 200, res: res });
 });
@@ -242,6 +238,7 @@ exports.isLoggedIn = async (req, res, next) => {
       }
 
       req.user = currentUser;
+      console.log(currentUser);
 
       return next();
     } catch (err) {

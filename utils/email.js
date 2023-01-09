@@ -28,33 +28,46 @@ module.exports = class Email {
 
   async newTransport(mailOptions) {
     let transport;
-    if (process.env.NODE_ENV === 'production') {
-      const accessToken = await auth.getAccessToken();
+
+    if (process.env.EMAIL_TYPE === 'gmail') {
       transport = nodemailer.createTransport({
-        service: 'gmail',
-        secure: true,
-        greetingTimeout: 1000 * 4,
+        service: 'Gmail',
+        host: 'smtp.gmail.com',
+        secure: false,
         auth: {
-          type: 'OAuth2',
           user: process.env.EMAIL_ID,
-          clientId: process.env.MAILLING_ID,
-          clientSecret: process.env.MAILLING_SECRET,
-          refreshToken: process.env.MAILLING_REFRESH_TOKEN,
-          accessToken: accessToken,
+          pass: process.env.GMAIL_APPA_PASSWORD,
         },
       });
     } else {
-      transport = nodemailer.createTransport({
-        host: process.env.TRAP_EMAIL_HOST,
-        port: process.env.TRAP_EMAIL_PORT,
-        auth: {
-          user: process.env.TRAP_EMAIL_USERNAME,
-          pass: process.env.TRAP_EMAIL_PASSWORD,
-        },
-      });
+      if (process.env.NODE_ENV === 'production') {
+        const accessToken = await auth.getAccessToken();
+        transport = nodemailer.createTransport({
+          service: 'gmail',
+          secure: true,
+          greetingTimeout: 1000 * 4,
+          auth: {
+            type: 'OAuth2',
+            user: process.env.EMAIL_ID,
+            clientId: process.env.MAILLING_ID,
+            clientSecret: process.env.MAILLING_SECRET,
+            refreshToken: process.env.MAILLING_REFRESH_TOKEN,
+            accessToken: accessToken,
+          },
+        });
+      } else {
+        transport = nodemailer.createTransport({
+          host: process.env.TRAP_EMAIL_HOST,
+          port: process.env.TRAP_EMAIL_PORT,
+          auth: {
+            user: process.env.TRAP_EMAIL_USERNAME,
+            pass: process.env.TRAP_EMAIL_PASSWORD,
+          },
+        });
+      }
     }
 
-    transport.sendMail(mailOptions);
+    await transport.sendMail(mailOptions);
   }
 
   async send(template, subject) {
@@ -64,7 +77,7 @@ module.exports = class Email {
     );
     const mailOptions = {
       to: this.to,
-      from: { email: 'backbook.creator@gmail.com', name: 'Backbook' },
+      from: process.env.EMAIL_ID,
       subject: subject,
       text: htmlToText(html),
       html: html,
@@ -72,14 +85,31 @@ module.exports = class Email {
 
     // await this.newTransport(mailOptions);
 
-    try {
-      await sgMail.send(mailOptions);
-    } catch (error) {
-      console.error(error);
+    // try {
+    //   await sgMail.send(mailOptions);
+    //   console.log('done');
+    // } catch (error) {
+    //   console.error(error);
 
-      if (error.response) {
-        console.error(error.response.body);
-      }
+    //   if (error.response) {
+    //     console.error(error.response.body);
+    //   }
+    // }
+
+    let transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      host: 'smtp.gmail.com',
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_ID,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    });
+
+    try {
+      await transporter.sendMail(mailOptions);
+    } catch (err) {
+      console.log(err);
     }
   }
 
