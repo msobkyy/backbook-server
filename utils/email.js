@@ -1,22 +1,22 @@
 const nodemailer = require('nodemailer');
-const { google } = require('googleapis');
+// const { google } = require('googleapis');
 const pug = require('pug');
 const { htmlToText } = require('html-to-text');
-const sgMail = require('@sendgrid/mail');
+// const sgMail = require('@sendgrid/mail');
 
 const oauth_link = 'https://developers.google.com/oauthplayground';
 
-const auth = new google.auth.OAuth2(
-  process.env.MAILLING_ID,
-  process.env.MAILLING_SECRET,
-  oauth_link
-);
+// const auth = new google.auth.OAuth2(
+//   process.env.MAILLING_ID,
+//   process.env.MAILLING_SECRET,
+//   oauth_link
+// );
 
-auth.setCredentials({
-  refresh_token: process.env.MAILLING_REFRESH_TOKEN,
-});
+// auth.setCredentials({
+//   refresh_token: process.env.MAILLING_REFRESH_TOKEN,
+// });
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+// sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 module.exports = class Email {
   constructor(user, url) {
@@ -26,49 +26,49 @@ module.exports = class Email {
     this.from = process.env.EMAIL_ID;
   }
 
-  async newTransport(mailOptions) {
-    let transport;
+  // async newTransport(mailOptions) {
+  //   let transport;
 
-    if (process.env.EMAIL_TYPE === 'gmail') {
-      transport = nodemailer.createTransport({
-        service: 'Gmail',
-        host: 'smtp.gmail.com',
-        secure: false,
-        auth: {
-          user: process.env.EMAIL_ID,
-          pass: process.env.GMAIL_APPA_PASSWORD,
-        },
-      });
-    } else {
-      if (process.env.NODE_ENV === 'production') {
-        const accessToken = await auth.getAccessToken();
-        transport = nodemailer.createTransport({
-          service: 'gmail',
-          secure: true,
-          greetingTimeout: 1000 * 4,
-          auth: {
-            type: 'OAuth2',
-            user: process.env.EMAIL_ID,
-            clientId: process.env.MAILLING_ID,
-            clientSecret: process.env.MAILLING_SECRET,
-            refreshToken: process.env.MAILLING_REFRESH_TOKEN,
-            accessToken: accessToken,
-          },
-        });
-      } else {
-        transport = nodemailer.createTransport({
-          host: process.env.TRAP_EMAIL_HOST,
-          port: process.env.TRAP_EMAIL_PORT,
-          auth: {
-            user: process.env.TRAP_EMAIL_USERNAME,
-            pass: process.env.TRAP_EMAIL_PASSWORD,
-          },
-        });
-      }
-    }
+  //   if (process.env.EMAIL_TYPE === 'gmail') {
+  //     transport = nodemailer.createTransport({
+  //       service: 'Gmail',
+  //       host: 'smtp.gmail.com',
+  //       secure: false,
+  //       auth: {
+  //         user: process.env.EMAIL_ID,
+  //         pass: process.env.GMAIL_APPA_PASSWORD,
+  //       },
+  //     });
+  //   } else {
+  //     if (process.env.NODE_ENV === 'production') {
+  //       const accessToken = await auth.getAccessToken();
+  //       transport = nodemailer.createTransport({
+  //         service: 'gmail',
+  //         secure: true,
+  //         greetingTimeout: 1000 * 4,
+  //         auth: {
+  //           type: 'OAuth2',
+  //           user: process.env.EMAIL_ID,
+  //           clientId: process.env.MAILLING_ID,
+  //           clientSecret: process.env.MAILLING_SECRET,
+  //           refreshToken: process.env.MAILLING_REFRESH_TOKEN,
+  //           accessToken: accessToken,
+  //         },
+  //       });
+  //     } else {
+  //       transport = nodemailer.createTransport({
+  //         host: process.env.TRAP_EMAIL_HOST,
+  //         port: process.env.TRAP_EMAIL_PORT,
+  //         auth: {
+  //           user: process.env.TRAP_EMAIL_USERNAME,
+  //           pass: process.env.TRAP_EMAIL_PASSWORD,
+  //         },
+  //       });
+  //     }
+  //   }
 
-    await transport.sendMail(mailOptions);
-  }
+  //   await transport.sendMail(mailOptions);
+  // }
 
   async send(template, subject) {
     const html = pug.renderFile(
