@@ -120,13 +120,16 @@ exports.login = catchAsync(async (req, res, next) => {
 });
 
 exports.ping = catchAsync(async (req, res, next) => {
+  const userId = req.user.id.toString();
   const recivedRequestsCount = await Friend.countDocuments({
-    recipient: req.user.id,
+    recipient: userId,
     status: 'pending',
   });
+
   res.status(200).json({
     status: 'success',
     recivedRequestsCount,
+    userId,
   });
 });
 
@@ -238,7 +241,6 @@ exports.isLoggedIn = async (req, res, next) => {
       }
 
       req.user = currentUser;
-      console.log(currentUser);
 
       return next();
     } catch (err) {
