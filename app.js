@@ -1,6 +1,7 @@
 const path = require('path');
 const express = require('express');
 const cors = require('cors');
+const xss = require('xss-clean');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
@@ -18,7 +19,7 @@ const whitelist = [
   'http://192.168.1.2:3000',
   'http://localhost:3000',
   'https://backbook.vercel.app',
-  'https://backbook.onrender.com', 
+  'https://backbook.onrender.com',
 ];
 const corsOptions = {
   credentials: true,
