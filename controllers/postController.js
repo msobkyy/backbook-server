@@ -4,11 +4,13 @@ const sharp = require('sharp');
 const Post = require('../models/postModel');
 const Follow = require('../models/followModel');
 const Reaction = require('../models/reactionModel');
+const User = require('../models/userModel');
 const Comment = require('../models/commentModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const APIFeatures = require('../utils/apiFeatures');
 const { uploadToCloudinary } = require('../utils/cloudinaryHandler');
+const Notification = require('../utils/notification');
 
 const filterObj = (obj, ...allowed) => {
   const newObj = {};
@@ -216,6 +218,17 @@ exports.addReact = catchAsync(async (req, res, next) => {
     });
     await reaction.save();
     newReaction = reaction.reactionStats;
+
+    const recipient = await User.findById(checkPost.user).select(
+      'fcmToken username'
+    );
+
+    await new Notification({
+      recipient: recipient,
+      sender: req.user.first_name,
+      postId: post,
+      postReact: type,
+    }).sendPostReact();
   } else {
     if (checkReact.type == type) {
       await checkReact.remove();
@@ -272,6 +285,17 @@ exports.addComment = catchAsync(async (req, res, next) => {
 
   const commentsCount = commendData?.commentsCount;
 
+  const recipient = await User.findById(checkPost.user).select(
+    'fcmToken username'
+  );
+
+  await new Notification({
+    recipient: recipient,
+    sender: req.user.first_name,
+    postId: post,
+    postReact: filteredBody.text.slice(0, 10),
+  }).sendPostComment();
+
   res.status(200).json({
     status: 'success',
     data: { commendData, commentsCount },
@@ -291,9 +315,17 @@ exports.commentLike = catchAsync(async (req, res, next) => {
   } else {
     checkComment.likes.push(user);
     await checkComment.save();
-  }
+    const recipient = await User.findById(checkComment.user).select(
+      'fcmToken username'
+    );
 
-  // const commentsCount = commendData?.commentsCount;
+    await new Notification({
+      recipient: recipient,
+      sender: req.user.first_name,
+      postId: checkComment.post,
+      postReact: '',
+    }).sendCommentLike();
+  }
 
   res.status(200).json({
     status: 'success',
@@ -324,6 +356,17 @@ exports.addCommentReply = catchAsync(async (req, res, next) => {
     path: 'replies.user',
     select: 'first_name last_name photo username confirmed',
   });
+
+  const recipient = await User.findById(checkComment.user).select(
+    'fcmToken username'
+  );
+
+  await new Notification({
+    recipient: recipient,
+    sender: req.user.first_name,
+    postId: checkComment.post,
+    postReact: filteredBody.text.slice(0, 10),
+  }).sendCommentComment();
 
   res.status(200).json({
     status: 'success',

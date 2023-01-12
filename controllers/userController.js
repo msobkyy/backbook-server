@@ -437,3 +437,25 @@ exports.getSearchHistory = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.addFCM = catchAsync(async (req, res, next) => {
+  const userId = req.user.id;
+  const { fcmToken } = req.body;
+
+  if (!fcmToken) return next(new AppError('Please provide a fcm token', 400));
+
+  await User.updateOne(
+    {
+      _id: userId,
+    },
+    {
+      fcmToken,
+    }
+  );
+
+  res.status(200).json({
+    status: 'success',
+    message: 'FCM token added',
+    fcmToken,
+  });
+});

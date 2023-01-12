@@ -45,5 +45,6 @@ router.get('/search', userController.getSearchHistory);
 router.post('/search', userController.searchUsers);
 router.post('/search/add', userController.addToSearchHistory);
 router.post('/search/remove', userController.removeFromSearch);
+router.post('/fcm', userController.addFCM);
 
 module.exports = router;

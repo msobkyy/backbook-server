@@ -4,6 +4,7 @@ const Follow = require('../models/followModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const getRelationship = require('../utils/getRelationship');
+const Notification = require('../utils/notification');
 
 exports.addFriend = catchAsync(async (req, res, next) => {
   const senderID = req.user.id;
@@ -12,7 +13,7 @@ exports.addFriend = catchAsync(async (req, res, next) => {
   if (senderID === recipientID)
     return next(new AppError("You can't add yourself", 400));
 
-  const recipient = await User.findById(recipientID);
+  const recipient = await User.findById(recipientID).select('+fcmToken');
 
   if (!recipient) return next(new AppError('No user Found', 400));
 
@@ -40,6 +41,13 @@ exports.addFriend = catchAsync(async (req, res, next) => {
     // Save the friend request to the database
     await friendRequest.save();
 
+    await new Notification({
+      recipient: recipient,
+      sender: req.user.first_name,
+      postId: req.user.username,
+      postReact: '',
+    }).sendFriendRequest();
+
     const existingFollow = await Follow.findOne({
       sender: senderID,
       recipient: recipient._id,
@@ -55,6 +63,12 @@ exports.addFriend = catchAsync(async (req, res, next) => {
   } else if (existingFriendRequest.status === 'cancelled') {
     existingFriendRequest.status = 'pending';
     await existingFriendRequest.save();
+    await new Notification({
+      recipient: recipient,
+      sender: req.user.first_name,
+      postId: req.user.username,
+      postReact: '',
+    }).sendFriendRequest();
   } else {
     return next(
       new AppError(
@@ -125,6 +139,17 @@ exports.acceptRequest = catchAsync(async (req, res, next) => {
   // Update the status of the friend request to "cancelled"
   friendRequest.status = 'accepted';
   await friendRequest.save();
+
+  const recipient = await User.findById(friendRequest.sender).select(
+    'fcmToken username'
+  );
+
+  await new Notification({
+    recipient: recipient,
+    sender: req.user.first_name,
+    postId: req.user.username,
+    postReact: '',
+  }).sendFriendAccept();
 
   const existingFollow = await Follow.findOne({
     sender: recipientID,
@@ -211,6 +236,16 @@ exports.follow = catchAsync(async (req, res, next) => {
     recipient: recipientID,
   });
   await follow.save();
+  const recipient = await User.findById(recipientID).select(
+    'fcmToken username'
+  );
+
+  await new Notification({
+    recipient: recipient,
+    sender: req.user.first_name,
+    postId: req.user.username,
+    postReact: '',
+  }).sendFollow();
   const friendship = await getRelationship(senderID, recipientID);
 
   // Send reponse

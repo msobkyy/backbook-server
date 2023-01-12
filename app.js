@@ -76,18 +76,19 @@ app.use(express.urlencoded({ extended: true, limit: '5000kb' }));
 app.use(cookieParser());
 app.use(xss());
 
-// app.set('view engine', 'pug');
-app.use(express.static('public'));
+app.set('view engine', 'pug');
+// app.use(express.static('public'));
 
-app.use(express.static(path.join(__dirname, 'build')));
+// app.use(express.static(path.join(__dirname, 'build')));
 
 app.use('/api/v1/users', usersRouter);
 app.use('/api/v1/posts', postRoutes);
 app.use('/api/v1/friends', friendsRoutes);
 
-app.use((req, res, next) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
-});
+// app.use((req, res, next) => {
+//   res.sendFile(path.join(__dirname, 'build', 'index.html'));
+// });
+
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl}`, 404));
 });

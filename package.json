@@ -20,6 +20,7 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "express-rate-limit": "^6.7.0",
+    "fcm-node": "^1.6.1",
     "html-to-text": "^8.2.1",
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^4.12.1",

@@ -131,6 +131,12 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
 
+    fcmToken: {
+      type: String,
+      select: false,
+      default: '',
+    },
+
     followersCount: { type: Number, default: 0 },
 
     followingCount: { type: Number, default: 0 },
