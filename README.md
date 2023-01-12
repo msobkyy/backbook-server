@@ -19,7 +19,7 @@ https://backbook.vercel.app
 - Search by email and send code to email to change the password.
 - Form validations using Formik, Yup, error massages.
 - Browser notification using firebase cloud messaging.
-- Ininite posts scroll.
+- infinite posts scroll.
 - Create posts : normal text, background, photos.
 - React system on posts : (like, love, wow, sad, angry).
 - Post Comments with text and upload photos and comment likes.
