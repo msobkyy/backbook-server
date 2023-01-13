@@ -162,7 +162,7 @@ postSchema.pre(/^find/, function (next) {
     })
     .populate({
       path: 'sharedID',
-      select: 'images user type text background',
+      select: 'images user type text background createdAt',
     });
   next();
 });
