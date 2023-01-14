@@ -296,7 +296,7 @@ exports.getFriends = catchAsync(async (req, res, next) => {
     status: 'accepted',
   })
     .sort({ createdAt: -1 })
-    .limit(9)
+    .limit(100)
     .populate({
       path: 'sender recipient',
       select: 'first_name last_name photo username gender cover',
@@ -320,7 +320,7 @@ exports.getFriends = catchAsync(async (req, res, next) => {
     status: 'pending',
   })
     .sort({ createdAt: -1 })
-    .limit(9)
+    .limit(100)
     .populate({
       path: 'sender',
       select: 'first_name last_name photo username gender cover',
@@ -332,7 +332,7 @@ exports.getFriends = catchAsync(async (req, res, next) => {
     status: 'pending',
   })
     .sort({ createdAt: -1 })
-    .limit(9)
+    .limit(100)
     .populate({
       path: 'recipient',
       select: 'first_name last_name photo username gender cover',
