@@ -91,7 +91,7 @@ exports.getProfile = catchAsync(async (req, res, next) => {
     status: 'accepted',
   })
     .sort({ createdAt: -1 })
-    .limit(9)
+    .limit(100)
     .populate({
       path: 'sender recipient',
       select: 'first_name last_name photo username gender cover confirmed',
