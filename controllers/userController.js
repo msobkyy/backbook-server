@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const User = require('../models/userModel');
 const Friend = require('../models/friendsModel');
 const Reaction = require('../models/reactionModel');
+const Notification = require('../models/NotificationModel');
+
 const Follow = require('../models/followModel');
 const Post = require('../models/postModel');
 const catchAsync = require('../utils/catchAsync');
@@ -290,6 +292,7 @@ exports.updateDetails = catchAsync(async (req, res, next) => {
 
 exports.searchUsers = catchAsync(async (req, res, next) => {
   const { term } = req.body;
+  const userId = req.user.id;
 
   if (!term) return next(new AppError('Please provide a search term', 400));
 
@@ -297,9 +300,9 @@ exports.searchUsers = catchAsync(async (req, res, next) => {
     {
       $match: {
         $or: [
-          { first_name: { $regex: term, $options: 'i' } },
-          { last_name: { $regex: term, $options: 'i' } },
-          { email: { $regex: term, $options: 'i' } },
+          { first_name: { $regex: term.trim(), $options: 'i' } },
+          { last_name: { $regex: term.trim(), $options: 'i' } },
+          { email: { $regex: term.trim(), $options: 'i' } },
         ],
       },
     },
@@ -308,16 +311,17 @@ exports.searchUsers = catchAsync(async (req, res, next) => {
         first_name: 1,
         last_name: 1,
         photo: 1,
-        username: 1,
       },
     },
   ]);
+
+  const filteredResults = results.filter((x) => x._id.toString() !== userId);
 
   // Send reponse
   res.status(200).json({
     status: 'success',
     data: {
-      results,
+      results: filteredResults,
     },
   });
 });
@@ -457,5 +461,48 @@ exports.addFCM = catchAsync(async (req, res, next) => {
     status: 'success',
     message: 'FCM token added',
     fcmToken,
+  });
+});
+
+exports.getNotification = catchAsync(async (req, res, next) => {
+  const userId = req.user.id;
+
+  const notifications = await Notification.find({ recipient: userId }).sort(
+    '-createdAt'
+  );
+  const existingUser = await User.findById(userId);
+  existingUser.unseenNotification = 0;
+  await existingUser.save({ validateBeforeSave: false });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      notifications,
+    },
+  });
+});
+
+exports.seenNotification = catchAsync(async (req, res, next) => {
+  const userId = req.user.id;
+  const { nid } = req.params;
+
+  console.log(nid);
+
+  const notification = await Notification.findById(nid);
+
+  if (!notification) return next(new AppError('Notification not found', 404));
+
+  notification.seen = 'seen';
+  await notification.save();
+
+  const existingUser = await User.findById(userId);
+  existingUser.unseenNotification = 0;
+  await existingUser.save({ validateBeforeSave: false });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      notification,
+    },
   });
 });

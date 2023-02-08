@@ -5,18 +5,22 @@ const xss = require('xss-clean');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
-
 const AppError = require('./utils/appError');
 const GlobalErrorHandler = require('./controllers/errorController');
+const { createServer } = require('http');
 
 const usersRouter = require('./routes/userRoutes');
 const postRoutes = require('./routes/postRoutes');
 const friendsRoutes = require('./routes/friendsRoutes');
+const messagesRoutes = require('./routes/messagesRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 
 const app = express();
+
 const whitelist = [
   'http://127.0.0.1:3000',
   'http://192.168.1.2:3000',
+  'http://192.168.1.6:3000',
   'http://192.168.1.2:8000',
   'http://localhost:3000',
   'https://backbook.vercel.app',
@@ -77,6 +81,7 @@ app.use(cookieParser());
 app.use(xss());
 
 app.set('view engine', 'pug');
+
 // app.use(express.static('public'));
 
 // app.use(express.static(path.join(__dirname, 'build')));
@@ -84,6 +89,8 @@ app.set('view engine', 'pug');
 app.use('/api/v1/users', usersRouter);
 app.use('/api/v1/posts', postRoutes);
 app.use('/api/v1/friends', friendsRoutes);
+app.use('/api/v1/chats', chatRoutes);
+app.use('/api/v1/messages', messagesRoutes);
 
 // app.use((req, res, next) => {
 //   res.sendFile(path.join(__dirname, 'build', 'index.html'));
@@ -95,4 +102,16 @@ app.all('*', (req, res, next) => {
 
 app.use(GlobalErrorHandler);
 
-module.exports = app;
+const httpServer = createServer(app);
+const sio = require('./utils/socket');
+
+sio.init(httpServer, {
+  pingTimeout: 60000,
+  pingInterval: 60000,
+  cors: {
+    origin: whitelist,
+  },
+});
+
+exports.whitelist = whitelist;
+exports.httpServer = httpServer;

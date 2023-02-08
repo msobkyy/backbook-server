@@ -32,9 +32,9 @@ const createSendToken = ({ user, statusCode, res, recivedRequestsCount }) => {
 
   res.status(statusCode).json({
     status: 'success',
-    token,
     data: {
       user,
+      token,
     },
   });
 };
@@ -99,7 +99,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
   // check if user exist and password is correct
   const user = await User.findOne({ email }).select(
-    'first_name last_name username photo verified password confirmed recivedRequestsCount'
+    'first_name last_name username photo verified password confirmed recivedRequestsCount unseenMessages unseenNotification'
   );
 
   if (!user || !(await user.correctPassword(password, user.password)))
@@ -129,6 +129,8 @@ exports.ping = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     recivedRequestsCount,
+    unseenMessages: req.user.unseenMessages,
+    unseenNotification: req.user.unseenNotification,
     userId,
   });
 });

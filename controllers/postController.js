@@ -209,6 +209,7 @@ exports.addReact = catchAsync(async (req, res, next) => {
   });
 
   let newReaction = null;
+  let newNotification = null;
 
   if (!checkReact) {
     const reaction = new Reaction({
@@ -223,9 +224,9 @@ exports.addReact = catchAsync(async (req, res, next) => {
       'fcmToken username'
     );
 
-    await new Notification({
+    newNotification = await new Notification({
       recipient: recipient,
-      sender: req.user.first_name,
+      sender: req.user,
       postId: post,
       postReact: type,
     }).sendPostReact();
@@ -242,7 +243,10 @@ exports.addReact = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: 'success',
-    data: { reactions: postReactions },
+    data: {
+      reactions: postReactions,
+      newNotification: newNotification ? newNotification : null,
+    },
   });
 });
 
@@ -289,16 +293,20 @@ exports.addComment = catchAsync(async (req, res, next) => {
     'fcmToken username'
   );
 
-  await new Notification({
+  const newNotification = await new Notification({
     recipient: recipient,
-    sender: req.user.first_name,
+    sender: req.user,
     postId: post,
     postReact: filteredBody.text.slice(0, 10),
   }).sendPostComment();
 
   res.status(200).json({
     status: 'success',
-    data: { commendData, commentsCount },
+    data: {
+      commendData,
+      commentsCount,
+      newNotification: newNotification ? newNotification : null,
+    },
   });
 });
 
@@ -308,6 +316,8 @@ exports.commentLike = catchAsync(async (req, res, next) => {
 
   const checkComment = await Comment.findById(comment);
   if (!checkComment) return next(new AppError('No comment found', 404));
+
+  let newNotification = null;
 
   if (checkComment.likes.includes(user)) {
     checkComment.likes.pull(user);
@@ -319,9 +329,9 @@ exports.commentLike = catchAsync(async (req, res, next) => {
       'fcmToken username'
     );
 
-    await new Notification({
+    newNotification = await new Notification({
       recipient: recipient,
-      sender: req.user.first_name,
+      sender: req.user,
       postId: checkComment.post,
       postReact: '',
     }).sendCommentLike();
@@ -329,7 +339,10 @@ exports.commentLike = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: 'success',
-    data: { likes: checkComment.likes },
+    data: {
+      likes: checkComment.likes,
+      newNotification: newNotification ? newNotification : null,
+    },
   });
 });
 
@@ -361,16 +374,19 @@ exports.addCommentReply = catchAsync(async (req, res, next) => {
     'fcmToken username'
   );
 
-  await new Notification({
+  const newNotification = await new Notification({
     recipient: recipient,
-    sender: req.user.first_name,
+    sender: req.user,
     postId: checkComment.post,
     postReact: filteredBody.text.slice(0, 10),
   }).sendCommentComment();
 
   res.status(200).json({
     status: 'success',
-    data: { replies: checkComment.replies },
+    data: {
+      replies: checkComment.replies,
+      newNotification: newNotification ? newNotification : null,
+    },
   });
 });
 

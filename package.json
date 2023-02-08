@@ -1,11 +1,12 @@
 {
-  "name": "backend",
+  "name": "backbook",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Mern Facebook Clone Server",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
+    "start:dev": " SET NODE_ENV=development&& nodemon server.js",
     "start:prod": " SET NODE_ENV=production&& nodemon server.js"
   },
   "keywords": [],
@@ -31,6 +32,7 @@
     "nodemon": "^2.0.20",
     "pug": "^3.0.2",
     "sharp": "^0.31.2",
+    "socket.io": "^4.5.4",
     "unique-username-generator": "^1.1.3",
     "validator": "^13.7.0",
     "xss-clean": "^0.1.1"

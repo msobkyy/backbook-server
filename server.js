@@ -3,26 +3,28 @@ const dotenv = require('dotenv');
 
 process.on('uncaughtException', (err) => {
   console.log('UNCAUGHT EXCEPTION! 💥 Shutting down...');
-  console.log(err.name, err.message);
+  console.log(err.name, err.message, err.stack);
   process.exit(1);
 });
 
 dotenv.config({ path: './.env' });
-const app = require('./app');
+const { httpServer } = require('./app');
 
 const DB = process.env.DATABASE.replace(
   '<PASSWORD>',
   process.env.DATABASE_PASSWORD
 );
 
-mongoose.set("strictQuery", false);
-mongoose.connect(DB, {
-   useNewUrlParser: true, 
-  useUnifiedTopology: true 
-  }).then(() => console.log('DB connection successful!'));
+mongoose.set('strictQuery', false);
+mongoose
+  .connect(DB, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log('DB connection successful!'));
 
 const port = process.env.PORT || 3000;
-const server = app.listen(port, () => {
+const server = httpServer.listen(port, () => {
   console.log(`App running on port ${port}...`);
 });
 

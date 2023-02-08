@@ -41,6 +41,9 @@ router.post(
   userController.updateCover
 );
 
+router.get('/notifications', userController.getNotification);
+router.put('/notifications/:nid/seen', userController.seenNotification);
+
 router.get('/search', userController.getSearchHistory);
 router.post('/search', userController.searchUsers);
 router.post('/search/add', userController.addToSearchHistory);

@@ -145,6 +145,10 @@ const userSchema = new mongoose.Schema(
 
     recivedRequestsCount: { type: Number, default: 0 },
 
+    unseenMessages: { type: Number, default: 0 },
+
+    unseenNotification: { type: Number, default: 0 },
+
     search: [
       {
         user: {

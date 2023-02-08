@@ -22,6 +22,8 @@ exports.addFriend = catchAsync(async (req, res, next) => {
     recipient: recipient._id,
   });
 
+  let newNotification = null;
+
   if (!existingFriendRequest) {
     const existingFriendRequestFromRecipient = await Friend.findOne({
       sender: recipient._id,
@@ -41,9 +43,9 @@ exports.addFriend = catchAsync(async (req, res, next) => {
     // Save the friend request to the database
     await friendRequest.save();
 
-    await new Notification({
+    newNotification = await new Notification({
       recipient: recipient,
-      sender: req.user.first_name,
+      sender: req.user,
       postId: req.user.username,
       postReact: '',
     }).sendFriendRequest();
@@ -62,10 +64,12 @@ exports.addFriend = catchAsync(async (req, res, next) => {
     }
   } else if (existingFriendRequest.status === 'cancelled') {
     existingFriendRequest.status = 'pending';
+
     await existingFriendRequest.save();
-    await new Notification({
+
+    newNotification = await new Notification({
       recipient: recipient,
-      sender: req.user.first_name,
+      sender: req.user,
       postId: req.user.username,
       postReact: '',
     }).sendFriendRequest();
@@ -85,6 +89,7 @@ exports.addFriend = catchAsync(async (req, res, next) => {
     data: {
       message: 'Request sent',
       friendship,
+      newNotification: newNotification ? newNotification : null,
     },
   });
 });
@@ -144,9 +149,9 @@ exports.acceptRequest = catchAsync(async (req, res, next) => {
     'fcmToken username'
   );
 
-  await new Notification({
+  const newNotification = await new Notification({
     recipient: recipient,
-    sender: req.user.first_name,
+    sender: req.user,
     postId: req.user.username,
     postReact: '',
   }).sendFriendAccept();
@@ -172,6 +177,7 @@ exports.acceptRequest = catchAsync(async (req, res, next) => {
     data: {
       message: 'Request accepted',
       friendship,
+      newNotification: newNotification ? newNotification : null,
     },
   });
 });
@@ -240,9 +246,9 @@ exports.follow = catchAsync(async (req, res, next) => {
     'fcmToken username'
   );
 
-  await new Notification({
+  const newNotification = await new Notification({
     recipient: recipient,
-    sender: req.user.first_name,
+    sender: req.user,
     postId: req.user.username,
     postReact: '',
   }).sendFollow();
@@ -254,6 +260,7 @@ exports.follow = catchAsync(async (req, res, next) => {
     data: {
       message: 'Follow successful',
       friendship,
+      newNotification: newNotification ? newNotification : null,
     },
   });
 });
