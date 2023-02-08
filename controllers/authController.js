@@ -7,6 +7,8 @@ const Follow = require('../models/followModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const Email = require('../utils/email');
+const Chat = require('../models/chatModel');
+const Message = require('../models/messageModel');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -86,6 +88,25 @@ exports.signup = catchAsync(async (req, res, next) => {
   await newUser.save({ validateBeforeSave: false });
   const url = `${process.env.FRONTEND_URL}/activate/${verificationEmailToken}`;
   await new Email(newUser, url).sendVerificationEmail();
+
+  const chatId = '63e30af0740d080a71d219b5';
+
+  await Chat.findByIdAndUpdate(
+    chatId,
+    {
+      $push: { users: senderID },
+    },
+    {
+      new: true,
+    }
+  );
+
+  await Message.create({
+    type: 'info',
+    sender: senderID,
+    content: `${newUser.first_name} ${newUser.last_name} joined the chat`,
+    chat: chatId,
+  });
 
   createSendToken({ user: newUser, statusCode: 200, res: res });
 });

@@ -72,7 +72,7 @@ exports.getChats = catchAsync(async (req, res, next) => {
     if (obj.type === 'private') {
       obj.photo = obj.users[0].photo;
       obj.chatName = `${obj.users[0].first_name} ${obj.users[0].last_name}`;
-    } else {
+    } else if (obj.type === 'group' && !obj.photo) {
       obj.photo =
         'https://res.cloudinary.com/dcu2kxr5x/image/upload/v1675105115/BACKBOOK/assets/group_fu7eoo.png';
     }
@@ -103,11 +103,11 @@ exports.createGroupChat = catchAsync(async (req, res, next) => {
     type: 'group',
     users,
     groupAdmin: user,
+    photo:
+      'https://res.cloudinary.com/dcu2kxr5x/image/upload/v1675105115/BACKBOOK/assets/group_fu7eoo.png',
   });
 
   await newGroupChat.save();
-  newGroupChat.photo =
-    'https://res.cloudinary.com/dcu2kxr5x/image/upload/v1675105115/BACKBOOK/assets/group_fu7eoo.png';
 
   // Send reponse
   res.status(200).json({
