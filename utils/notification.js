@@ -1,6 +1,6 @@
 const FCM = require('fcm-node');
 const fcm = new FCM(process.env.FCM_SERVER_KEY);
-const NotificationModel = require('../models/NotificationModel');
+const NotificationModel = require('../models/notificationModel');
 
 module.exports = class Notification {
   constructor({ recipient, sender, postId, postReact }) {

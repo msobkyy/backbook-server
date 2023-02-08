@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const User = require('../models/userModel');
 const Friend = require('../models/friendsModel');
 const Reaction = require('../models/reactionModel');
-const Notification = require('../models/NotificationModel');
+const NotificationModel = require('../models/notificationModel');
 
 const Follow = require('../models/followModel');
 const Post = require('../models/postModel');
@@ -467,9 +467,9 @@ exports.addFCM = catchAsync(async (req, res, next) => {
 exports.getNotification = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
 
-  const notifications = await Notification.find({ recipient: userId }).sort(
-    '-createdAt'
-  );
+  const notifications = await NotificationModel.find({
+    recipient: userId,
+  }).sort('-createdAt');
   const existingUser = await User.findById(userId);
   existingUser.unseenNotification = 0;
   await existingUser.save({ validateBeforeSave: false });
@@ -488,7 +488,7 @@ exports.seenNotification = catchAsync(async (req, res, next) => {
 
   console.log(nid);
 
-  const notification = await Notification.findById(nid);
+  const notification = await NotificationModel.findById(nid);
 
   if (!notification) return next(new AppError('Notification not found', 404));
 
