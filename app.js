@@ -45,7 +45,7 @@ const corsOptions = {
 // const corsOptions = {
 //   origin: function (origin, callback) {
 //     if (!origin) {
-//       //for bypassing postman req with  no origin
+//       //  for bypassing postman req with  no origin 0
 //       return callback(null, true);
 //     }
 //     if (whitelist.indexOf(origin) !== -1) {
